@@ -1,0 +1,14 @@
+{
+    "name": "xfile/x-http-router",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "XModule\\XHttpRouter\\": "src/"
+        }
+    },
+    "license": "Apache-2.0",
+    "version": "1.0.1",
+    "require": {
+        "php": ">=7.4"
+    }
+}
