@@ -26,11 +26,16 @@ class XHttpRouter {
 
 		foreach ($prefix_list as $location ) {
 			if(!is_null($this->method)) continue;
-			$method_class = $this->find_method($location);
+			[$method_class, $options] = $this->find_method($location);
 			if(!is_null($method_class)) {
 				try {
 					$create_object = new $method_class();
-					if($create_object instanceof xHttpMethodType)  $this->method = $create_object;
+					if($create_object instanceof xHttpMethodType) {
+						if(isset($options['path_options'])) {
+							$create_object->__set_path_options($options['path_options']);
+						}
+						$this->method = $create_object;
+					}
 				}catch (\Exception $e){}
 			}
 		}
@@ -59,19 +64,31 @@ class XHttpRouter {
 
 		$request_uri = $this->request_uri;
 		$variants = [];
+		$best_similar = [0, '/', null];
 		foreach ($scan_list as $file) {
 			$path = strtolower(rtrim($location["prefix"],'/').$file);
 			$this->debug["file"][] = $path.' - '.substr($path,0,strlen($request_uri));
+			$similar = $this->similar($request_uri, $path);
+			$similar_request = substr($request_uri,0,$similar);
+			if(substr($path,0,strlen($similar_request)) == strtolower($similar_request) ) {
+				if($best_similar[0] < $similar) $best_similar = [$similar, $similar_request, $file];
+			}
+
 			if(substr($path,0,strlen($request_uri)) == strtolower($request_uri) ) {
 				$_last_path = substr($path,strlen($request_uri));
 				if( in_array($_last_path, ['.php','/index.php']))
-					$variants[] = $location['data'][1].str_replace('/','\\',substr($file,0,-4));
+					$variants[] = [$location['data'][1].str_replace('/','\\',substr($file,0,-4)), []];
 			}
+		}
+		if($best_similar[0] > 1) {
+			$variants[] = [$location['data'][1].str_replace('/','\\',substr($best_similar[2],0,-4)),[
+				"path_options" => explode('/',str_replace($best_similar[1], '',$request_uri))
+			]];
 		}
 
 		$this->debug["v_request_uri"][$location["prefix"]] = $request_uri;
 		$this->debug["variants"][$location["prefix"]] = $variants;
-		return $variants[0] ?? null;
+		return $variants[0] ?? [null,null];
 	}
 
 
@@ -88,6 +105,12 @@ class XHttpRouter {
 		});
 
 		return $prefix_list;
+	}
+
+	private function similar($str1 , $str2): int {
+		$len = min(strlen($str1),strlen($str2)); $c=0;
+		for($i=0;$i<$len;$i++) if($str1[$i] == $str2[$i]) $c++; else return $c;
+		return $c;
 	}
 
 	private function scan_location ($target): array {
