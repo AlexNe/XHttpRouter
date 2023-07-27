@@ -80,7 +80,7 @@ class XHttpRouter {
 					$variants[] = [$location['data'][1].str_replace('/','\\',substr($file,0,-4)), []];
 			}
 		}
-		if($best_similar[0] > 1) {
+		if($best_similar[0] > strlen($location["prefix"])) {
 			$variants[] = [$location['data'][1].str_replace('/','\\',substr($best_similar[2],0,-4)),[
 				"path_options" => explode('/',trim(str_replace($best_similar[1], '',$request_uri),'/'))
 			]];
