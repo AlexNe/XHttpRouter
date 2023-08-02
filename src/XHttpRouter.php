@@ -71,22 +71,23 @@ class XHttpRouter {
 			$similar = $this->similar($request_uri, $path);
 			$similar_request = substr($request_uri,0,$similar);
 			$path_vars = [];
-			$_path = explode('/',$path);
+			$_path = explode('/',str_replace('.php','',$path));
 			for ($i=0;$i<count($_path);$i++) {
 				$__tmp = [];
 				for($j=0;$j<=$i;$j++) { $__tmp[]=$_path[$j]; }
 				$__ver = implode('/',$__tmp);
 				if(strlen($__ver)>0)$path_vars[] = $__ver;
 			}
+			$this->debug["__similar_check"] [] = $similar_request .' === '.implode(' | ',$path_vars);
 //			if(substr($path,0,strlen($similar_request)) == strtolower($similar_request) ) {
 			if(in_array(strtolower($similar_request), $path_vars )) {
 				if($best_similar[0] < $similar) $best_similar = [$similar, $similar_request, $file];
 				$this->debug["__similar"] [] = substr($path,0,strlen($similar_request)).' == '.strtolower($similar_request) .' === '.implode(' | ',$path_vars) ;
 			}
-			$this->debug["__testing"] [] = substr($path,0,strlen($request_uri)) . ' == '. strtolower($request_uri);
+			$this->debug["__compare_request_uri"] [] = substr($path,0,strlen($request_uri)) . ' == '. strtolower($request_uri);
 			if(substr($path,0,strlen($request_uri)) == strtolower($request_uri) ) {
 				$_last_path = substr($path,strlen($request_uri));
-				$this->debug["__testing"] [] = $_last_path;
+				$this->debug["__compare_request_uri"] [] = ' ----- ' . $_last_path;
 				if( in_array($_last_path, ['.php','/index.php','index.php']))
 					$variants[] = [$location['data'][1].str_replace('/','\\',substr($file,0,-4)), []];
 			}
